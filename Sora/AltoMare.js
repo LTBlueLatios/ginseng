@@ -1,3 +1,6 @@
+// v0.0.1 Index ~ Not recommended to use in production!
+// Inherits the Sora library license
+
 const AltoMare = {
     checkParams(params, types) {
         for (let i = 0; i < params.length; i++) {
