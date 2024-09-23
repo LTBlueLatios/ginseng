@@ -6,6 +6,7 @@ const ginseng = {
     init() {
         this.scriptManager.registerPlugins([
             Scripts.AutoRebuild,
+            Scripts.AutoHeal
         ]);
     }
 };

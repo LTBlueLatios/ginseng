@@ -5,8 +5,8 @@ const AutoRebuild = {
     buildingQueue: [],
 
     init() {
-        game.network.addRpcHandler("LocalBuilding", this.handleLocalBuilding);
-        game.network.addEntityUpdateHandler(this.handleEntityUpdate);
+        game.network.addRpcHandler("LocalBuilding", (buildings) => this.handleLocalBuilding(buildings));
+        game.network.addEntityUpdateHandler(() => this.handleEntityUpdate());
     },
     onEnable() {
         Object.values(game.ui.buildings).forEach(building => {

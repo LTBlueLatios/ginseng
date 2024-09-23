@@ -15,7 +15,7 @@ const AutoHeal = {
     },
 
     init() {
-        game.network.addEntityHandler(this.handleEntityUpdate);
+        game.network.addEntityHandler(() => this.handleEntityUpdate());
     },
     onEnable() {},
     onDisable() {},
