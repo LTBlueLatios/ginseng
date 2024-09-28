@@ -6,7 +6,7 @@ const AutoRebuild = {
 
     init() {
         game.network.addRpcHandler("LocalBuilding", (buildings) => this.handleLocalBuilding(buildings));
-        game.network.addTickCallback(() => this.handleTick());
+        game.renderer.addTickCallback(() => this.handleTick());
     },
 
     onEnable() {
