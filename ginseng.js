@@ -1,4 +1,5 @@
 import * as Scripts from "./scripts";
+import { incrementCounter } from "./TickUtility";
 
 const ginseng = {
     scriptManager: new ScriptManager,
@@ -8,6 +9,8 @@ const ginseng = {
             Scripts.AutoRebuild,
             Scripts.AutoHeal
         ]);
+
+        game.renderer.addTickCallback(incrementCounter);
     }
 };
 

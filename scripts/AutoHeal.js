@@ -15,11 +15,11 @@ const AutoHeal = {
     },
 
     init() {
-        game.network.addEntityHandler(() => this.handleEntityUpdate());
+        game.renderer.addTickCallback(() => this.handleTick());
     },
     onEnable() {},
     onDisable() {},
-    handleEntityUpdate() {
+    handleTick() {
         if (!this.status) return;
 
         const playerTick = game.ui.getPlayerTick();

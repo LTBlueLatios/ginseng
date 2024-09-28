@@ -6,75 +6,84 @@ const AutoRebuild = {
 
     init() {
         game.network.addRpcHandler("LocalBuilding", (buildings) => this.handleLocalBuilding(buildings));
-        game.network.addEntityUpdateHandler(() => this.handleEntityUpdate());
+        game.network.addTickCallback(() => this.handleTick());
     },
+
     onEnable() {
         Object.values(game.ui.buildings).forEach(building => {
             if (building.type === "GoldStash") return;
-            
             const key = `${building.x},${building.y}`;
-            this.selectedBuildings.set(key, [building.x, building.y, building.type, building.tier]);
+            const buildingYaw = game.world.entities[building.uid].targetTick.yaw;
+            this.selectedBuildings.set(key, [building.x, building.y, building.type, buildingYaw, building.tier]);
         });
     },
+    
     onDisable() {
         this.selectedBuildings.clear();
         this.buildingQueue = [];
     },
+
     handleLocalBuilding(buildings) {
         if (!this.status) return;
-        
+
         buildings.forEach(building => {
-            if (this.status && building.dead && this.autoRebuildTarget.has(`${building.x},${building.y}`)) {
+            const key = `${building.x},${building.y}`;
+            if (this.status && building.dead && this.selectedBuildings.has(key)) {
                 if (building.type === "GoldStash") {
-                    // lol imagine losing your stash XD
                     this.onDisable();
                     this.status = false;
                     console.warn("Stash died!", new Date().toISOString());
                     return;
                 }
 
-                this.buildingQueue.push({
-                    x: building.x,
-                    y: building.y,
-                    type: building.type,
-                    yaw: building.yaw ? building.yaw : 0,
-                    originalTier: building.tier
-                });
+                const selectedData = this.selectedBuildings.get(key);
+                if (selectedData) {
+                    const [x, y, type, yaw, originalTier] = selectedData;
+                    this.buildingQueue.push({
+                        x,
+                        y,
+                        type,
+                        yaw,
+                        originalTier,
+                    });
+                }
             }
         });
     },
-    handleEntityUpdate() {
+    handleTick() {
         if (!this.status) return;
-        
+
         this.buildingQueue.forEach(queuedBuilding => {
-            const placedBuilding = Object.values(this.buildings).some(building =>
+            const placedBuilding = Object.values(game.ui.buildings).find(building =>
                 building.x === queuedBuilding.x &&
                 building.y === queuedBuilding.y &&
                 building.type === queuedBuilding.type &&
+                building.yaw === queuedBuilding.yaw &&
                 !building.dead
             );
 
             if (!placedBuilding) {
-                this.sendRpc({
+                game.network.sendRpc({
                     name: "MakeBuilding",
                     x: queuedBuilding.x,
                     y: queuedBuilding.y,
                     type: queuedBuilding.type,
-                    yaw: queuedBuilding.yaw
+                    yaw: queuedBuilding.yaw,
                 });
             } else {
                 // hardy hardy har har har 0 tick upgrade
-                const currentTier = this.buildings[queuedBuilding.uid].tier;
+                const currentTier = placedBuilding.tier;
                 const targetTier = queuedBuilding.originalTier;
 
                 for (let tier = currentTier + 1; tier <= targetTier; tier += 1) {
-                    this.sendRpc({
+                    game.network.sendRpc({
                         name: "UpgradeBuilding",
-                        uid: queuedBuilding.uid
+                        uid: placedBuilding.uid,
                     });
                 }
+
+                this.buildingQueue.splice(this.buildingQueue.indexOf(queuedBuilding), 1);
             }
-            this.buildingQueue = this.buildingQueue.filter(b => b.uid !== queuedBuilding.uid);
         });
     }
 };
